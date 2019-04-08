@@ -5,4 +5,5 @@ Combiner ile Reducer arasindaki fark ise, Reducer direk output file a yazarken, 
 
 # google paperi onemli!
 greping ve sorting de ne tur bir data kullanildigi bilgisi yok!!
-asd
+
+ahmet eroglu
