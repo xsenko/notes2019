@@ -172,7 +172,7 @@ o zaman su sekilde genelleyebiliriz.
 nTimes(myFunc, n, x) : nTimes(myFunc, n-1, myFunc(x)) = nTimes(myFunc, n-2, myFunc( myFunc(x) ) 
 yani o zaman yukaridaki scala kodu gibi bunu recursive sekilde tanimlayabiliriz.
 
-**bu kismi tam anlayamadim ama yaziyorum:**
+
 yukaridaki ornekte nTimes fonksiyonu gun sonunda Int donduruyordu, simdiki ornekte ise Int yerine baska bir fonksiyon dondurecek.
 
 ```scala
@@ -187,6 +187,166 @@ yukaridaki ornekte hem if hem else kismi yeni birer fonksiyon donduruyorlar, fak
 val plus10 = nTimesBetter(plusOne, 10)
 println(plus10(1)) // prints 11
 ```
+
+`nTimesBetter` i biraz daha acalim simdi. `nTimesBetter(addOne, 2)` seklinde kullandigimizi varsayalim. 
+ilk geri donucek fonksiyon su sekildedir
+```scala
+(x: Int) => nTimesBetter(addOne, 1)(addOne(x))
+// same as:
+(x: Int) => nTimesBetter(addOne, 1).apply(addOne(x))
+```
+`nTimesBetter(addOne, 1)` ise asagidaki sekilde donucek
+```scala
+(x: Int) => nTimesBetter(addOne, 0)(addOne(x))
+// same as:
+(x: Int) => nTimesBetter(addOne, 0).apply(addOne(x))
+```
+`nTimesBetter(addOne, 0)` ise asagidaki sekilde donuce
+```scala
+(x: Int) => x(addOne(x))
+// same as:
+(x: Int) => x.apply(addOne(x))
+```
+hepsini toparlarsak asagidaki gibi bir sonuc elde ediyoruz.
+```scala
+(x: Int) => ((x.apply(addOne(x))).apply(addOne(x))).apply(addOne(x))
+```
+apply methodu aslinda x gordugun yere argumani koy demek
+asagidaki basit ornege bakalim mesela
+```scala
+val func = (x: Int) => x + 1
+func(2)
+// same as:
+func.apply(2)
+```
+`func.apply(2)` ise func yani `x => x + 1` fonksiyonunda x argumani 2 alicak demek o da `x => 2 + 1` yapar.
+o zaman `x.apply(addOne(x))` te `x` gordugun yere `addOne(x)` koy demektir.
+bu da direk `addOne(x)` yapar. O zaman bizim 2 ustteki fonksiyonu yeniden duzenlersek su sekilde olucaktir.
+```scala
+(x: Int) => (addOne(x).apply(addOne(x))).apply(addOne(x))
+// same as:
+(x: Int) => addOne(addOne(x)).apply(addOne(x))
+// same as:
+(x: Int) => addOne(addOne(addOne(x)))
+```
+`nTimesBetter` yukaridaki fonksiyonu bize dondurecektir. daha sonra bu fonksiyonu x parametresi ile cagirirsak yani `nTimesBetter(addOne, 2)` bize yukaridaki fonksiyonu dondu bunu `val funcX` e atadik diyelim 
+
+`val funcX = nTimesBetter(addOne, 2)`  
+daha sonra `funcX(1)` dedigimizde yukaridaki fonksiyonda x yerine 1 koymus olucaz. `funcX.apply(1)` yani o da bu demek aslinda
+
+```scala
+addOne(addOne(addOne(x))).apply(1)
+// same as:
+addOne(addOne(addOne(1)))
+```
+hatirlarsak `addOne(1)` bize `2` donucek, `addOne(2)` ise `3` donucek. `addOne(3)` ise `4` donmus olucak.
+
+another Example:
+![when addOne method changes](\pics\d076c561-8e80-4b14-9565-174a0696404e.jpg "another example")
+
+## Scala curries
+
+Bir tane adder tanimlayalim
+```scala
+def superAdder(x: Int): (Int => Int) = (y: Int) => x + y
+```
+bu goruldugu gibi arguman olarka Int alip Int => Int bir fonksiyon dondurmekte.bunu assagidaki gibi kullanabiliriz.
+```scala
+val temp1 = superAdder(2) // meaning : 2 + y
+val temp2 = temp1(5) // meaning : 2 + 5
+println(temp2) // prints 7
+```
+asagidaki yazim ise tamamen ayni yukaridaki islem ile
+```scala
+def superAdderCurried(x: Int)(y: Int): Int = x + y
+```
+bunu da assagidaki gibi kullanabiliriz
+```scala
+val temp4: (Int => Int) = superAdderCurried(2)
+val temp5 = temp4(5)
+println(temp5)
+```
+burda onemli olan yukaridakinden farkli olarak
+`val temp4: (Int => Int) = superAdderCurried(2)` seklinde temp4 un tipini belirttik, aksi halde compiler dan hata aliriz, cunku temp4 superAdderCurried(2) nin ne tip dondurecegibi bilemez.
+
+Baska bir ornek:
+```scala
+def curriedFormatter(c: String)(x: Double): String = c.format(x)
+
+val standartFormat: Double => String = curriedFormatter("%4.2f") // meaning : "%4.2f".format(x)
+val preciseFormat: Double => String = curriedFormatter("%10.8f") // meaning : "%10.8f".format(x)
+
+println(standartFormat(Math.PI)) // meaning : "%4.2f".format(Math.PI) prints: 3.14
+println(preciseFormat(Math.PI))  // meaning : "%10.8f".format(Math.PI) prints: 3.14159265
+```
+
+## exercises for curries
+a function that takes a function and returns a curried function
+```scala
+def toCurry(f: (Int, Int) => Int): (Int => Int => Int) = x => y => f(x, y)
+
+val myAdder: (Int, Int) => Int = (x, y) => x + y
+val temp10 = toCurry(myAdder)
+println(temp10(3)(5)) // prints 8
+```
+
+toCurry fonksiyonunu inceleyelim. `x => func1` diyelim. yani x bir fonksiyon dondurecek. Dondurdugu fonksiyon da `y => f(x,y)` seklinde bir fonksyion, f ise herhangi bir baska fonksiyon, yukaridaki ornekte mesela f fonksiyonunu x + y olarka tanimaldik. o zaman aslinda bizim dondurdugumuz fonksiyon su sekilde oluyor  
+`x => y => x + y`  
+yani curried bir fonksiyon dondurmus oluyoruz.
+
+simdi assagidaki ornege bakalim
+```scala
+def superAdder2: (Int => Int => Int) = toCurry(_ + _)
+def add4 = superAdder2(4)
+println(add4(17)) // prints 21
+```
+yukaridaki ile cok benzer bir islem yaptik (_ + _) demek toCurry fonksiyonuna f(x,y) => x + y seklinde bir fonksiyon veriyorum demek. Ve bize return olarak curried fonksiyon donuyor.
+
+simdi assagidaki ornegi inceleyelim
+```scala
+def fromCurry(f: Int => Int => Int): (Int, Int) => Int = (x, y) => f(x)(y)
+
+val myCurryAdder: (Int => Int => Int) = x => y => x + y
+val temp11 = fromCurry(myCurryAdder)
+println(temp11(3, 5))
+```
+
+bu sefer fromCurry fonksiyonuna bir curried fonksiyon verdik. donusu icin de bize iki int argumani alan ve int donen bir fonksiyon vermesini sagladik. 
+`(x, y) => f(x)(y)` demek aslinda `[f.apply(x)].apply(y)` demektir. Yani fromCurry bize `[f.apply(x)].apply(y)` donmus oldu. f ise `y => x + y` diye bir fonksiyon.
+o zaman aslinda  
+`[(y => x + y).apply(x)].apply(y)` seklinde bir fonksiyonumuz oluyor. x yerine 3 koyarsak  
+`[(y => x + y).apply(3)].apply(y)` = `[(y => 3 + y)].apply(y)` oluyor. daha sonra y yerine 5 koyarsak toplam 8 i elde ediyoruz.
+
+baska bir ornek
+```scala
+val simpleAdder = fromCurry(superAdder2)
+println(simpleAdder(4, 17)) // prints 21
+```
+
+yukarida superAdder2 yi bir curried function a donusturmustuk, burda ise onu tekrardan 2 parametre alip int donen bir fonksiyona donusturduk.
+
+compose ve andThen ornekleri
+```scala
+def compose[A, B, T](f: A => B, g: T => A): T => B = x => f(g(x))
+def andThen[A, B, C](f: A => B, g: B => C): A => C = x => g(f(x))
+
+val add2 = (x: Int) => x + 2
+val times3 = (x: Int) => x * 3
+
+val composeResult = compose(times3, add2)
+println(composeResult(2)) // prints 12
+
+val andThenResult = andThen(times3, add2)
+println(andThenResult(2)) // print 8
+```
+
+
+
+
+
+
+
+
 
 
 
