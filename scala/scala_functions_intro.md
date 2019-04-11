@@ -242,7 +242,7 @@ addOne(addOne(addOne(1)))
 hatirlarsak `addOne(1)` bize `2` donucek, `addOne(2)` ise `3` donucek. `addOne(3)` ise `4` donmus olucak.
 
 another Example:
-![when addOne method changes](\pics\d076c561-8e80-4b14-9565-174a0696404e.jpg "another example")
+![when addOne method changes](pics/d076c561-8e80-4b14-9565-174a0696404e.jpg "another example")
 
 ## Scala curries
 
