@@ -265,9 +265,16 @@ bunu da assagidaki gibi kullanabiliriz
 val temp4: (Int => Int) = superAdderCurried(2)
 val temp5 = temp4(5)
 println(temp5)
+
+// or
+val temp6 = superAdderCurried(2)(5)
+println(temp6) // prints 7
 ```
 burda onemli olan yukaridakinden farkli olarak
 `val temp4: (Int => Int) = superAdderCurried(2)` seklinde temp4 un tipini belirttik, aksi halde compiler dan hata aliriz, cunku temp4 superAdderCurried(2) nin ne tip dondurecegibi bilemez.
+
+Yani aslinda `def superAdder(x: Int): (Int => Int) = (y: Int) => x + y`  
+demek, ben `superAdder()` i cagirdigimda bana bir fonksiyon donucek, ve bu fonksiyon da `(y: Int) => x + y` olan bir fonksiyon, yani `superAdder` in dondugu fonksiyon da icine bir parametre alicak `y` diye ve `x + y` sonucunu bana donucek.
 
 Baska bir ornek:
 ```scala
@@ -339,6 +346,104 @@ println(composeResult(2)) // prints 12
 val andThenResult = andThen(times3, add2)
 println(andThenResult(2)) // print 8
 ```
+
+-----------
+
+## Map FlatMap and Filter
+
+```scala
+val list = List(1,2,3)
+// same as
+val list2 = List.apply(1,2,3)
+```
+
+```scala
+val returnList1 = list.map(_ + 1)
+println(returnlist1)
+```
+
+listedeki her elemana 1 ekleyip yeni bir liste doner, unutma map methodu her zaman yeni bir liste doner.  
+Hatirlarsak `list.map(_ + 1)` demek `list.map(x => x + 1)` ile tamamen ayni sey idi. Yani scala'nin map fonksiyonu da, java da oldugu gibi arguman olarak bir fonksiyon bekliyor.
+
+```scala
+println(list.filter(_ % 2 == 0))
+println(list.filter(x => {x % 2 == 0}))
+```
+
+ayni sekilde filter methodu da icine bir fonksiyon bekliyor, ve map methodunda oldugu gibi filter methodu da yeni bir list doner. Sadece verdigimiz fonksiyonu her elemana uygular ve sadece true degerlerini geri doner.
+
+flatMap ise List icinde baska List ler varsa bunlarin hepsini bir liste olarak doner, ornek olarak:
+```scala
+val toPair = (x: Int) => List(x, x+1)
+println(list.flatMap(toPair)) // prints List(1, 2, 2, 3, 3, 4)
+```
+burda olan su, flatMap list'in her elemani icin toPair fonksiyonunu calistirdi yani elimizde ilk eleman icin yeni bir list dondu ve bu `List(1,2)` daha sonra ikinci eleman icin yeni bir list daha dondu ve bu `List(2,3)` bu sekilde listenin sonuna kadar gitti, eger flatMap yerine map kullanmis olsaydik ana listemizin altinda ufak listeler olucakti ve bu sekilde gorunecekti  
+`List(List(1, 2), List(2, 3), List(3, 4))`  
+fakat flatMap kullandigimiz icin List altindaki List ler tek bir list e cevrildi ve bu sonuc print edildi:  
+`List(1, 2, 2, 3, 3, 4)`
+
+map ve flatMap e ornek
+```scala
+// print all combinations for two lists
+val numbers = List(1,2,3,4)
+val chars = List('a', 'b', 'c', 'd')
+
+val test = numbers.flatMap(x => chars.map(y => x.toString + y)) 
+println(test)
+```
+burda yaptigimiz, flatMap e normal function yerine curried function verdik. Yani numbers in her elemani icin `chars.map(y => x.toString + y)` fonksiyonu calisacak, numbers in ilk elemani 1 oldugu icin fonksiyon ilk eleman icin sunu yapicak  
+`chars.map(y => 1.toString + y)`  
+daha sonra chars in her elemani icin `1.toString + y` calisacak, yani charstaki her eleman icin `1a, 1b, 1c, 1d` listesi donucek, eger `numbers.map(x => chars.map(y => x.toString + y))` deseydik elimizde List icinde List olucakti fakat `numbers.flatMap` kullandigimiz icin, List in icindeki List'ler tek bir listeye indirgenecek ve asafidaki sonucu basicaktir  
+`List(1a, 1b, 1c, 1d, 2a, 2b, 2c, 2d, 3a, 3b, 3c, 3d, 4a, 4b, 4c, 4d)`
+
+peki elimizde bir de 3. bir liste olsaydi
+```scala
+// what if we need 3 loops
+val colors = List("black", "white")
+val testWithColors = numbers.flatMap(x => chars.flatMap(y => colors.map(z => x.toString+y+z)))
+println(testWithColors)
+// prints List(1ablack, 1awhite, 1bblack, 1bwhite, 1cblack, 1cwhite, 1dblack, 1dwhite, 2ablack, 2awhite, 2bblack, 2bwhite, 2cblack, 2cwhite, 2dblack, 2dwhite, 3ablack, 3awhite, 3bblack, 3bwhite, 3cblack ...)
+```
+
+forEach java daki forEach ile hemen hemen ayni, forEach te arguman olarak bir fonksiyon aliyor fakat birsey dondurmuyor
+```scala
+(numbers.foreach(println))
+```
+
+### scala for comprehensions
+```scala
+val forCombinations = for {
+    n <- numbers
+    c <- chars
+    color <- colors
+} yield n.toString + "-" + c + "-" + color
+
+println(forCombinations)
+```
+
+yukarida 3 liste icin nasil tum kombinasyonlari basabilecegimizi gormustuk, bu da aslinda ayni seyi yapiyor, fakat scala nin for comprehension ozelligini kullaniyor. burdaki `yield` keyword'u python un yield'inden farkli sekilde calisiyor, python da yield bir generator dondururken burda sadece, neyin return degeri oalcagini belirtiyor, ve for Comprehension lar da bize bir List donuyor, yani burdaki `forCombinations` aslinda bir List
+
+yani yukaridaki kod sunla ayni  
+`numbers.flatMap(n => chars.flatMap(c => colors.map(color => n.toString+ "-" + c + "-"+ color)))`
+
+peki bir de buna filter eklemek istersek, o zaman assagidaki gibi bir kullanim gerekicek
+```scala
+val forCombinations2 = for {
+    n <- numbers if (n % 2 == 0)
+    c <- chars
+    color <- colors
+} yield n.toString + "-" + c + "-" + color
+```
+bu da asagidaki kod ile ayni  
+`numbers.filter(_ % 2 == 0).flatMap(x => chars.flatMap(y => colors.map(z => x.toString+y+z)))`
+
+eger for comprehension lari forEach gibi kullanmak istiyorsa:
+```scala
+val sameWithForEach = for {
+    n <- numbers
+} println(n)
+```
+bu sefer `yield` keyword une gerek yok, cunku bir sey return etmemiz gerekmiyor
 
 
 
