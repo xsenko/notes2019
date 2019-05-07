@@ -445,6 +445,52 @@ val sameWithForEach = for {
 ```
 bu sefer `yield` keyword une gerek yok, cunku bir sey return etmemiz gerekmiyor
 
+### Udemy deki egitimdeki Maybe alistirmasi
+Egitimde bizden bir veya hic eleman icermeyen bir collection yapmamizi ve buna, map, flatMap ve filter methodlarini eklenmemiz istendi.
+
+```scala
+abstract class Maybe[+T] {
+  def map[B](f: T => B): Maybe[B]
+  def flatMap[B](f: T=> Maybe[B]): Maybe[B]
+  def filter(p: T => Boolean): Maybe[T]
+}
+
+case object MaybeNot extends Maybe[Nothing]{
+  override def map[B](f: Nothing => B): Maybe[B] = MaybeNot
+  override def flatMap[B](f: Nothing => Maybe[B]): Maybe[B] = MaybeNot
+  override def filter(p: Nothing => Boolean): Maybe[Nothing] = MaybeNot
+}
+
+case class Just[+T](value: T) extends Maybe[T] {
+  override def map[B](f: T => B): Maybe[B] = Just(f(value))
+  override def flatMap[B](f: T=> Maybe[B]): Maybe[B] = f(value)
+  override def filter(p: T => Boolean): Maybe[T] = {
+    if (p(value)) this
+    else MaybeNot
+  }
+}
+
+object MaybeTest extends App {
+  val just3 = Just(3)
+  println(just3)
+  println(just3.map(_ * 2))
+  println(just3.flatMap(x => Just(x % 2 == 0)))
+  println(just3.filter(x => x % 2 == 0))
+}
+```
+
+tek tek inceleyelim simdi.  
+abstract class java da oldugu gibi ayni ozellikleri tasiyor burda da, implementasyonu yapmiyoruz (istesek yapabiliriz yapmamiza bir engel yok) ve abstract classtan yeni instance olusturamiyoruz.  
+`[+T]` ise covariant sembolu, yani T ve T'nin subtype'larini kabul ediyoruz demek. JAva daki `<? extends Number>` gibi dusunebiliriz. `[+Number]` ile ayni sey. Yani tipi Number olan veya Number'dan turemis seyleri kabul et demek, mesela Int, Long etc.
+
+`case object` ve `case class` ise normal class ve object'ten biraz daha farkli. Oncelikle `case class` a bakalim. Bunun bize yarari, new keywordu kullanmadan instance yaratabilmemiz ve apply methodunun otomatik olarak gelmesi.  
+`case object` ile `object` arasindaki fark ise, case object in toString, hashCode gibi hazir methodlarla gelmesi ve serialized edilebilmesi.
+
+`Nothing` ise aslinda bir Trait, `Everything` in subtype i fakat `Anything` in super i degil. Nothing bir instance i yok.
+`Null` ise yine bir trait ve instance i `null`. Bu javadaki null ile hemen hemen ayni.
+`Nil` ise Empty list veya zero degerindeki lenght leri berlitmek icin kullaniliyor. `None` ise nullPointerException donmemesi icin yaratilmis birsey, java daki Options gibi dusunebiliriz, burda da Options in iki degeri var `some` ve `none`. `Unit` ise fonksiyon veya method hicbirsey donmeyecegi zaman kullaniliyor. Java daki void gibi.
+ 
+
 
 
 
