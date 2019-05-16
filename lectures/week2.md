@@ -22,4 +22,24 @@ Placementlarina gore 4 e ayriliyor
 - mobile code : mesela java applets
 - mobile agents : **buna ornek nedir?**
 
-architectural patterns ta kaldin
+-> Architectual patterns
+- layered : bir layer diger layerin complexitysini gizliyor
+- tiered : layered a complementary. MVC modeli mesela
+diger patternlar: proxx, brokarage, reflection
+
+limitations of middleware: ???
+
+## Fundamental Models
+Fundemental modellerin amaci, generalization yapicak, ne possible ne impossible diye verilen assumptionlara gore. 
+- interaction model: 
+
+- failure model: 
+    - omission failures: when process or communication channel fails what they perform.
+    - arbitrary failures: worst possible failure semantics
+    - timing failures
+    - masking failures
+
+- security model
+    
+
+time clocks and distributed systems paper.
