@@ -260,6 +260,152 @@ LC2 : process mesaj gonderirken timestamp olarak L nin degerini gonderir. Receiv
 
 Bu durumda e -> e' icin, yani once e olmus sonra e' olmus, L(e) < L(e') diyebliriiz. Fakat bunun tersini soyleyemeiz. yani bir event'in logical clock u digerinden daha kucuk diye ondan daha once olmus olmak zorunda olmaz, cunku bunlar bagimsiz ceya concurrent te olabilirler.
 
+## 15.4 Global States
+**Distributed Garbage Collection** : Eger daha once yaratilmis bir object'in referansi yoksa bunu garbage olarak kabul ediyoruz, distributed system'de garbage collection yapmak icni tum sisteme bakmamiz lazim, cunku process'lerin iciyle birlikte communication channel'a da bakmamiz lazim. (Bir object'in referansi o an msj ile gonderiliyor olabilir)
+
+**Distributed deadlock detection :** when each of a collection of processes waits for another, bu durumda deadlock oluyor. Yine sistemdeki deadlocku bulabilmek icin sistemin o anki global state'ini bilmemiz lazim.
+
+**Distributed termination detection :** Global olarak sistemin terminate edip etmedigini bulmak icin sadece single process'lere bakmamiz yeterli olmaz. Mesela iki tane process olsun p1 ve p2, p1 passive durumda olsun, p2 de mesaj gonderip duruma gecsin, o anda hem p1 hem p2 passive durumdadir bu yuzden program terminate etmis gibi dusunebiliriz ama aslinda p1 e dogru gelen bir mesja vardir, ve p1 mesaji alinca yeniden active duruma gececektir.
+
+**Global states and consistent cuts :** The essential problem is absence of global time. Cunku tum cihazlardaki clocklar perfect sekilde sync olmus olsaydi t aninda hangi process'in ne durumda oldugunu kesin olarak bilebilirdik.
+
+Distributed systemde bir event ya process'in internali ile ilgilidir, ya da mesaj alip gonderme ile ilgilidir.  
+Mantiken bir process'in eventlerini state'ine kaydettirirsek, sonra tum state'leri toplarsak global state'i elde etmis oluruz. Fakat bunu yapabilmek icin cut'lar yapmamiz lazim, ve cut yaparken happened-before ilkesine uymamiz lazim. Yani p1 in e, p2 nin de f diye iki eventi olsun eger, f->e varsa hem e hem de f o cut'in icinde olmak zorundadir.
+
+Mesela bir process e0 da internal isini yapsin e1 de mesaj gonderiyor olsun, baska bir process'te f0 da mesaj aliyor olsun, eger biz cut'i e0 ve f0 seklinde yaparsak inconsistent cut yapmis oluruz, cunku e1 -> f0 durumunu bozmus oluruz.
+
+**Snapshot algorithm :**
+Algoritmanin calisabilmesi icin su assumptionlari yapmamiz gerekiyor:
+* Hicbir zaman process'ler veya channel'lar fail etmiyor. communication her zaman reliable.
+* Channels are unidirectional and provide FIFO ordered message delivery
+* Tum process'ler arasinda bir connection bulunuyor
+* Her process her an snapshot alabilecek kapasiteye sahip
+* process'ler snapshot alirken diger islerini de yapabiliyorlar. Yani snapshot aliyorum diye internal isini veya mesaj alma/gonderme isini kesmek zorunda degil.
+
+![snapshot](files/snapshot.png)
+
+terminate olmasi icin bu algoritmanin process px'in tum incoming channellardan bir marker mesaj almasi gerekiyor. Daha sonra herkes snapshot isini bitirdiginde bir baska process gelip bu snapshotlari toplayabilir.
+
+# Ari - 10 Distributed Algorithms
+Chapter 10 ve 11'deki assumption node'lar fail etmiyor, veya fail etse bile internal islerini bir sekilde yapamayabiliyor ama mesaj alip gondermeye devam ediyor. Diger bir assumptionda connection reliable olarka kabul ediyoruz. Ayni zamanda transit times of messages are finite but arbitrary. Yani mesaj illa karsiya gidiyor max time i belli olmasa da. Diger bir assumption ise networkun fully connected oldugu.
+
+**Ricart-Agrawala algorithm :** temelde her process bir ticket number seciyor, ve critical section'a girmek isteyen process'ler diger processlere kendi ticket numberlarini gonderiyorlar, eger response gelirse karsidakinin ticket number'i daha buyuk demektir (ticket number i ufak olan critical section'a girebiliyor) cevap gelmezse karsidakinin daha kucuk demektir. Bir process diger tum processlerden onay aldiktan sonra critical section'a girebiliyor.
+
+![agrawala1](files/agrawala1.png)
+![agrawala2](files/agrawala2.png)
+
+myNum <- highsetNum + 1 yapmamizin nedeni, numberlari random olarak sectigimiz icin bir process cok kucuk digeri cok buyuk bir numara secebilir, ve kucuk olan critical sectiondan cikip bir daha numara sectiginde yine diger processten ufak bir numara secebilir, bu da numarasi buyuk olan process'in starvation durumuna girmesine neden olur. Bunu onlemek icin.  
+requestCS koymamizin nedeni de, her process hep critical section'a girmek istemeyebilir, eger ihtiyaci yoksa girmek icin mesaj alip gondermesine de gerek yok.
+
+**Richard-Agrawala token passing :** ilk algoritmada problem, eger node sayisi cok fazla olursa cok fazla mesajlasma oluyor, bir node'un diger hepsinden onay mesajini almasi gerekiyor, bunu engellemek icin token passing ile bir algoritma olusturulmus. Burda iki tane listen oluyor biri granted[] digeri de requested[]  
+token snede diyelim token i sadece requested[n] > granted[n] olan node'lara gonderiyorsun, boylece mesaj trafigi de azalmis oluyor.
+
+**Neilsen-Mizuno algorithm :** RA token passingteki problem granted list'in token ile berakber gitmesi idi. Tum node'larin birbirine bagli oldugunu dusunuyorsun ve bir node'u root secerek bir virtual tree olusturuyorsun. (genelde spanning tree kullanarak tree yi olusturuyorsun). Token da ilk root node'ta oluyor. 
+
+Daha sonra baska bir node token'i istediginde, parent'i uzerinden istekte bulunuyor taa ki o anki token holder a gelene kadar msj parent'tan parent'a iletiliyor.
+
+# Ari - 11 Global Properties
+Aslinda tam bir global property'den bahsedemeyiz distributed system'larda, cunku tam sen o propoerty'i aldiginda o property degismis olabilir. 
+
+Distributed system tum node'larin tum iligli process'leri terminate oldugunda terminate olur. Fakat distributed system'lerde hangi process'lerin terminate oldugunu bulmak kolay degil cunku global bir state'i gormeye ihtiyacimiz var. Bunun icin de Dijkstra - Sholten algirotmasi var. 
+
+DS (Dijkstra - Sholten) algoritmasinin da bazi assumptionlari var, ilk once diger algoritmalarda oldugu gibi tum node'larin birbiri ile bagli olmasina gerek yok. Bir tane environment node'u olmasi lazim, bunun incoming edge'i olmamamsi lazim ve her node'a erisebilmesi lazim. Environment node'un gorevi diger node'lardan bilgi toplayip termination durumunu raporlamak. Diger bir assumption ise i node'un dan j node'una bir connection varsa bir de j'den i'ye back edge olmasi gerekiyor. Son assumption ise node'larin inactive olmasi gerekiyor, yani bir computation yapmayacak ama mesaj dinlemeye devam edebilir. Zaten termination icin gerekli mesjai alinca da receive compute send islemlerini tamamlayip terminate olmasi gerekiyor node'un.
+
+**DS algorithm :** algoritma 2 tane variable tutuyor, biri inDeficit[0,..0] diye bir array, bu node A'ya incoming her connection icin o kanaldan A'ya gelen mesaj - A'nin gonderdigi mesaj sayisini tutuyor. Mesela X A'ya Cxa kanalindan 3 mesaj gonderdi, a'da x'e yine ayni kanalda 1 mesaj gonderdi, o zaman inDeficit[Cxa] = 2 oluyor. Ayni zamanda tum kanallar icin inDeficit'in toplami da tutuluyor.
+
+Digeri de outDeficit, bunu her kanal icin tutmaya gerek yok, A nin outgoing kanallarindan gonderdigi mesajlar - back edge'ten kendisine gelenler i tutuyor.
+
+DS algorithm'de sanirim her mesaj icin bir sinyal gonderiliyor.
+
+DS algorithm'de yine virtual bir tree yaratiliyor, spanning tree kullanilarak. outgoing edge'leri olmayan node'lar baska node'larin leafleri oluyor. Bu durumda da root, environment node oluyor. Leaf'ler terminate ettiklerinde parent'larina signal yolluyorlar, parentler tum children'lari terminate oldugunda ve mesaj aldiginda, kendisinin de terminate ettigini kendi parent'ina iletiyor, bu sekilde root tum childrenlari icin terminate oldum mesjai aldiginda sistemin terminate oldugunu anlayabiliyorz.
+
+Eger bir node'un parent'u henuz yoksa, yani parent = -1 ise, ilk aldigi mesaj kimden gelirse o node'u kendisinin parent'i yapiyor. Bir node final signal'ini (yani terminate true olduktan sonra gonderecegi tek signal'i) outDeficit=0 olunca kendi parent'ina gonderiyor. 
+
+![dsalgo](files/termination.png)
+
+# Cou 15 - Coordination and Agreement
+Burdaki konularin nihai amaci, bir kordinasyon saglamak veya shared value'lar hakkinda anlasmak, ortak karara varmak. 
+
+Bunu fixed master-slave'ler ile herzaman yapmak istemeyiz, master-slave kullanildiginda koordinasyon ve shared value agreement kolay olabilir ama single point of failure ortaya cikiyor.
+
+tum algoritmalardan once bilmemiz gereken sey, asenkron sistemlerde hicbir zaman bir agreement garantilenemez.
+
+Bu chapterdaki tum algoritmalar, node'larin reliable bir channel ustunde haberlestiklerini varsayiyor. Burda reliablity sunu belirtiyor, mesela mesaj gonderimi basarisiz oldu o zaman failure masking yapabilir, yani retransmit yapabilir ama eventually o msj karsi tarafa ulasir. Diger bir assumption, process failure'lar diger process'ler icin bir threat olmamali.
+
+## 15.2 Distributed Mutual Exclusion
+Distributed mutual exlusion'in correctness ozellikleri  
+Safety: At monst one process may execute in the critical section
+Liveness: Request to critical section eventually got response  
+Ikinci durum, hem deadlock'u hem de starvation'i onlemis oluyor. (Starvation olmadigi duruma da fairness diyoruz.)  
+Fairness'i saglayan bir baska durum da, starvation i engelleyen durum ayni zamanda, happened-before olayi. Eger bir process baska bir process'ten once request'te bulunduysa sira onundur. (genelde critical section da FIFO olarak stacklanabilir bunlar)
+
+Algoritmalari performansini degerlendirirken de su kriterlere bakilir: kullandigi bandwith, client delay (enter ve exit operasyonlarinda ne kadar vakit harciyor) ve son olarak bir process critial section'dan ciktiktan sonra gideri ne kadar hizli girebiliyor bunun olcusu, buna throuightput of the system da deniyor.
+
+**Cental server algortihm :** ortada bir server olur ve critical section ya serverda olur, ya da baska yerde ama server critical section'a girmek isteyene token verir. Eger o an token baska birindeyse server cevap vermez bu request'e ama o process'i listeye atar, ve baska bir process critical section'dan ciktiginda, server listedeki en eski process'e token'i verir. Bu liveness ve safety'i saglasa da happened-before'u saglamaz demis kitap ama server'daki listing FIFO gibi bir yapi oldugu surece fair de ayni zamanda
+
+**Ring bassed algorithm :** herhangi bir server'a ihtivac yok, token ring seklinde ilerliyor, kimin ihtiyaci varsa o an kullaniyor ve sonra komsusuna devrediyor, eger komsunun critical section'a girme ihtiyaci yoksa direk yanindakine veriyor. Burdaki problem N tane process varsa token 1. process'te ise ve N-1. process critical section'a girmek istiyorsa N process kadar beklemesi gerekyor. Ayni zamanda token devamli dolastigi icin bandwith te kullaniyor cokca.
+
+**Algortihm using multicast and logical clocks :** bu richard and agrawala algoritmasi. 
+
+**Makekawa's voting algortihm :** Maekawa, richard ve agrawala'dan farkli olarka critical section'a girmek icin bir process'in tum diger process'lerden izin almasina gerke olmadigini farketmis. Tum kullanicilarindan cevap beklemek yerine her process kendi Vi diye voting set'ini olusturuyor, fakat bu voting set olusturulurken assagidaki kurallara uyulmak zorunda  
+* Vi kesisim Vj bos kume olmamak zorunda, yani rastegele 2 process'in voting setlerinde en az 1 ortak eleman bulunmali
+* |vi| = K, yani her voting set ayni sayida eleman icermeli.
+* her process en az M sayida voting set'te bulunmali  
+Burda K yaklasik olarka kok N, ve M = K seklinde varsayimlarda bulunabliriz. Bu sekli ile kullanildiginda yalzni deadlock'a yol acabilir, deadlock olmamasini istiyorsak bir de queue bulundurmaliyiz, ki kim kimdne once critical section icin izin istedi onun bilgisini tutabilelim.
+
+## 15.3 Elections
+Herhangi bir process'in ozel bir is veya particular role'de olmasini belirlemek icin election yapilmasi gerekiyor. Mesela N process icinden bir server secmek.
+
+Burda onemli olan N process concurrent sekilde N tane election baslatabilir, bu yuzden election process'lerin bir sekilde unique olmasi saglanmali. Mesela bir server coktugunde yeni server secilmesi icin 2 farkli process ayni zamanda election baslatabilir.
+
+**ring based election :** su sekilde isliyor, process'lerden biri coordinator'in fail oldugunu anlayinca election baslatiyor. Kendi participant valuesunu true ya donduruyor ve kendi idenfitifer'ini koyup (bu identifier secilmeyi saglayan variable, en kucuk veya en buyuk seciliyor) komsusuna gonderiyor, komsusu alinca yine kendi participant degerini true yapiyor, ve kendi identifier'i ile geleni karsilastiriyor, eger gelen daha kucukse (kucuk kazansin diyelim) direk forward ediyor komsusuna, kendisninki daha kucukse, mesajdaki identifer degerini kendisininki ile degistirip oyle forward ediyor.  
+participant'i true olan biri identifier degerinde kendi degerini gordugunde election i kazanmis ve yeni coordinator olmustur demek zaten, daha sonra elected mesaji gonderir herkese, boylece herkes kimin kazandigni ogrenmis olur.
+
+**bully algortihm :** Sistemi sync sistem olarak kabul ediyor, cunku timeoutlari kullaniyor, process failure u anlamak icin. Burda olay tum process'leri diger tum process'lerin identifier'ini biliyor. Bir process coordinatior'un fail ettigini anladiginda, sadece kendisinden daha buyuk (veya kucuk) identifier a sahip process'lere election mesaji gonderiyor. Mesaji alan process, gondere OK mesaji gonderiyor ve kendi bir bir election baslatiyor, eger timeout'tan once bir reply mesaji gelmezse o process kendisini coordinator larka ilan ediyor.  
+
+Genel olarak election'lar ile ilgili problem, eger connection reliable degilse networkun bir bolumunun iletisimi diger bolumu ile kopabilir ve split-brain syndrome olusur, bu durumda her bolunmus network kendi coordinatorunu secer.
+
+# 15.4 Coordination and agreement in group communication
+**Basic Multicast :** (B-multicast)Basic multicast mesajin eventually gidecegini garanti eder. (IP gibi degil yani) Burda onemli olan multicast grubu icindeki tum uyelere bircok thread yaratip concurrent sekilde mesaj gonderirsek, geri donus mesajlari ayni anda gelmeye baslayabilir ve bu da implementasyondaki buffer'i doldurup, process'in bazi gelen mesjalari drop etmesine neden olabilir. Burda bir baska onemli nokta da arbitrary order ile mesajlari gonderiyor.
+
+**Reliable multicast :** (R-multicast) Burdaki olay multicast grubu icindeki bir process bile mesaj almis olursa, digerleri de almak zorunda. Mesela sender mesajlari gruba gonderirken islemin yarisinda fail edebilir, ve bir takim process'lere mesaj gitmisken bir kismina da gitmemis olabilir. Reliable multicast su 3 ozelligi bulundurmak zorunda:  
+* Integrity = A correct process p delivers a message m at most once. (Yani en az bir kez bile olsa m mesajini almasi etmesi lazim)  
+* Validity = If a correct process multicasts message m, then it will eventually deliver m. (yani gidip m mesajini ileticekse gidip baska bir mesaj iletememli) - ayni zamanda liveness i sagliyor
+* Agreement = if a correct process delivers message m, then all other correct processes in group(m) will eventually deliver m. (gruptaki uyelerden biri m mesajini almissa eventually grubun diger uyerleri de almali.) - atomicity i sagliyor
+
+**Ordered Multicast :** Multicast mesajlarin bir sira ile gitmesini istedigimizde kullaniriz. Mesela bir power plant'te belki multicast'in belli bir sira ile processlere gonderilmesi gerkeiyordur. 3 tip ordering var:  
+* FIFO ordering
+* Casual ordering : If multicast(g, m) o multicast(g, mc ), where o is the
+happened-before relation induced only by messages sent between the members of g,
+then any correct process that delivers mc will deliver m before mc
+* Total ordering : Eger processlerden biri m mesajini m' mesajini almadan once alirsa, diger tum grup elemanlari da once m sonra m' nu almali.
+
+## 15.5 Consensus and related problems
+Byzantine generals and interactive consistency, bu ikisi agreement problemleri. Onemli nokta, asenkron sistemde, processlerden yalnizca biri bile fauly olursa consensus garantilenemez. (hem crash hem arbitrary fault giriyor buna).
+
+Bu unitedeki daha onceki konularda connection reliable ve processler fail edebilir demistik. (yani sadece crash failler) bu bolumde buna arbitrary failleri de ekliyoruz. Bunu cozmenin bir yonetmi message sign, eger mesaji gonderen bir hash ile veya baska bir sekilde message'i sign ederse arbitrary fail eden process bu mesaji degistirse bile anlasilir.
+
+**Definition of the consensus problem :** Her process undecided state i ile basliyor, ve her process v diye bir single value propose ediyor. Daha sonra process'ler farkli sekillerde kendi iclerin mesajlasiyorlar ve consensusa varildiginda undecided olan state'i decided'a ceviriyorlar. ve degerini de degistiremiyorlar.  
+Termination : Eventually each correct process sets its decision variable.
+Agreement : The decision value of all correct process sohuld be same
+Integrity : f the correct processes all proposed the same value, then any correct
+process in the decided state has chosen that value.
+Consensus'a varmanin bir yontemi, ilgili process'leri bir grupta toplariz ve her proces kendi value'sunu multicast eder, multicastlerin sonucunda her processte diger her process'in valusu olacagindan artik implementasyon nasilsa, majority mi min mi max mi alinacaksa onu alir ve state'i decided yapar. 
+Fakat burdaki problem byzantine yani arbitray faultlar, bir process bilerek ya da bilmeden diger processlere birbirinden farkli random degerler gonderebilir ve bu durumda consensus garnati edilemez.
+
+**Byzantine generals problem :* 3 veya daha fazla general attack veya retreat icin karara varmalari lazim. Bunlarin bir liderleri var ve o karari veriyor, daha sonra bunlarin lieutenantlari karari diger generallere bildirmeleri lazim, fakat bas general bir lietutant a farkli digerine farkli bisi diyebilir, veya lietuant hayindir ve attack kararini retreat diye iletebilir.
+
+**Interactive consistentcy :** Her process single value oneriyor, algoritmanin amaci vector of values ta bir aggreement yaratmak olsun, bunun adi decision vector oluyor. Bu durumda her process'te gun sonunda ayni vector un olmasi lazim.
+
+**Consensus in a sync system :** 
+
+
+
+
+
+
+
+
 
 
 
