@@ -41,6 +41,14 @@ Hardware elementlerinin representationi.
 ## 2.3 Architectural Models
 Distributed systemin komponentlerini ve bu komponentler arasindaki communicationi inceliyor. Bu modelin amaci sistemin simdiki ve gelecekti istekleri yerine getirebilecek sekilde yapilandirmak ve sistemi reliable, cost effective ve managable sekilde kurmak.
 
+**Communicating Entities :** Bunlar genelde process'ler oluyor. Veya distribured system icindeki islem yapan ve birbiri ile konusan birimler. Bunlar Object, Component veya Web service'ler olabilir.
+
+**Communication Paradigms :** Entities'lerin aralarinda nasil konustulari ile ilgili. Basitce 3'e ayirabilirz, Interprocess communication : Low level'deki iletisim socket programming veya multicasting. Remote Invocation : Remote object'in methodlarini calistirmak, RMI, RPC, Request-Reply. Indirect Communication : Group communication, Publish-Subscribe, Message queues, Tuple spaces and DSM(Distributed Share Memory)
+
+**Roles and Responsibilites :** 2'ye ayriliyor, Client-Server ve Peer-to-Peer
+
+**Placement :** 
+
 ## 2.4 Fundemental Model
 Fundemental modelin 2 maaci, ilki tum yaptigimiz assumptionlari acik ve belirgin yapmak, digeri de generalization ile bu assumptionlari kullanarak neyin possible neyin impoissble oldugunu bulmak.  
 Fundemental model sadee essential ingredientleri bulundurmali icinde. Fundemental model 3 farkli model altinda incelenir, bunlar interaction model, failure model ve security model.
@@ -133,7 +141,9 @@ that  is  continually  enabled  eventually  appears  in  the  scenario.
 Formal verification yapmak icin model checker tool'lari kullaniyoruz. Bunlarin bir ornegi spin isimli tool. Temporal logic, formal verification yapabilmek icin en efektif yontem. 
 
 ## 4.3 Basic concepts of temporal logic
-Normal logicte veya matematiksel ifadelerde, bir degiskene sayi atatigimizda o durur, fakat bir computer programi calisirken turn = 1 dogru iken daha sonra turn e 2 degeri atanabilir ve bu sefer de bu false olabilir. Yani turn = 1 bazen true bazen de false olur. Bu durumlari cover edebilmek icin temporal logic ve temporal operatorleri kullaniyoruz. Bunun bir varyasyonu LTL yani linear temporal logic
+Normal logicte veya matematiksel ifadelerde, bir degiskene sayi atatigimizda o durur, fakat bir computer programi calisirken turn = 1 dogru iken daha sonra turn e 2 degeri atanabilir ve bu sefer de bu false olabilir. Yani turn = 1 bazen true bazen de false olur. Bu durumlari cover edebilmek icin temporal logic ve temporal operatorleri kullaniyoruz. Bunun bir varyasyonu LTL yani linear temporal logic.
+
+Yani temporal logic'te truth values zaman icinde degisebilir. Veya bir durumun true olmasi baska bir durumun ilierde true olmasi ile saglanabilir. 
 
 LTL in bazi elemenlari, always, eventually, duality. 
 
@@ -233,8 +243,9 @@ Synchronous sistemlerde D bound'u clock drift, maximum message delay ve time req
 
 Sync sistemlerde clocklari sync etmek icin 3 tane algoritma var
 * Cristan's method : client mr diye bir request gonderiyor time i ogrenmek icin, time server da mt olarka donuyor, mt'nin icinde mesjai gonderirken ki zaman da var buna da t diyelim. Async sistemlerde teoride upper bound'un siniri olmasa da bu tur pair of process'lerde reasonbly short oldugunu gormus ve probablistic olarka calisan bir method gelistirmis. 
-* Berkley algoritm :
-* Network time protocol : 
+* Berkley algoritm : Cristan's method'u kullaniyor temelde, master duzenli olarak slave'lere msj gonderip onlarin time'ini ogreniyor ve gerekiyorsa adjust ediyor, eger master fail ederse bir election ile baska bir master seciliyor.
+
+* Network time protocol : Strata'lar var. Direk radio kulelerinden UTC zamanini alan cihazlar Strata1 oluyor, bunlardan sync olanlar Strata2 oluyor boyle boyle gidiyor ve leaf'tekiler de workstation'lar oluyor. Starata numarasi arttikca hassasiyette azaliyor gittikce.
 
 ## 14.4 Logical Time and Logical Clocks
 Lamport'unda dedigi gibi distributed systemlerde clock'lari perfect sekilde sync edemiyoruz. Lamport'un logical clock'lari aslinda physical casulitiy'e dayaniyor.
@@ -260,7 +271,7 @@ LC2 : process mesaj gonderirken timestamp olarak L nin degerini gonderir. Receiv
 
 Bu durumda e -> e' icin, yani once e olmus sonra e' olmus, L(e) < L(e') diyebliriiz. Fakat bunun tersini soyleyemeiz. yani bir event'in logical clock u digerinden daha kucuk diye ondan daha once olmus olmak zorunda olmaz, cunku bunlar bagimsiz ceya concurrent te olabilirler.
 
-## 15.4 Global States
+## 14.5 Global States
 **Distributed Garbage Collection** : Eger daha once yaratilmis bir object'in referansi yoksa bunu garbage olarak kabul ediyoruz, distributed system'de garbage collection yapmak icni tum sisteme bakmamiz lazim, cunku process'lerin iciyle birlikte communication channel'a da bakmamiz lazim. (Bir object'in referansi o an msj ile gonderiliyor olabilir)
 
 **Distributed deadlock detection :** when each of a collection of processes waits for another, bu durumda deadlock oluyor. Yine sistemdeki deadlocku bulabilmek icin sistemin o anki global state'ini bilmemiz lazim.
@@ -365,7 +376,7 @@ participant'i true olan biri identifier degerinde kendi degerini gordugunde elec
 
 Genel olarak election'lar ile ilgili problem, eger connection reliable degilse networkun bir bolumunun iletisimi diger bolumu ile kopabilir ve split-brain syndrome olusur, bu durumda her bolunmus network kendi coordinatorunu secer.
 
-# 15.4 Coordination and agreement in group communication
+## 15.4 Coordination and agreement in group communication
 **Basic Multicast :** (B-multicast)Basic multicast mesajin eventually gidecegini garanti eder. (IP gibi degil yani) Burda onemli olan multicast grubu icindeki tum uyelere bircok thread yaratip concurrent sekilde mesaj gonderirsek, geri donus mesajlari ayni anda gelmeye baslayabilir ve bu da implementasyondaki buffer'i doldurup, process'in bazi gelen mesjalari drop etmesine neden olabilir. Burda bir baska onemli nokta da arbitrary order ile mesajlari gonderiyor.
 
 **Reliable multicast :** (R-multicast) Burdaki olay multicast grubu icindeki bir process bile mesaj almis olursa, digerleri de almak zorunda. Mesela sender mesajlari gruba gonderirken islemin yarisinda fail edebilir, ve bir takim process'lere mesaj gitmisken bir kismina da gitmemis olabilir. Reliable multicast su 3 ozelligi bulundurmak zorunda:  
@@ -393,22 +404,84 @@ process in the decided state has chosen that value.
 Consensus'a varmanin bir yontemi, ilgili process'leri bir grupta toplariz ve her proces kendi value'sunu multicast eder, multicastlerin sonucunda her processte diger her process'in valusu olacagindan artik implementasyon nasilsa, majority mi min mi max mi alinacaksa onu alir ve state'i decided yapar. 
 Fakat burdaki problem byzantine yani arbitray faultlar, bir process bilerek ya da bilmeden diger processlere birbirinden farkli random degerler gonderebilir ve bu durumda consensus garnati edilemez.
 
-**Byzantine generals problem :* 3 veya daha fazla general attack veya retreat icin karara varmalari lazim. Bunlarin bir liderleri var ve o karari veriyor, daha sonra bunlarin lieutenantlari karari diger generallere bildirmeleri lazim, fakat bas general bir lietutant a farkli digerine farkli bisi diyebilir, veya lietuant hayindir ve attack kararini retreat diye iletebilir.
+**Byzantine generals problem :** 3 veya daha fazla general attack veya retreat icin karara varmalari lazim. Bunlarin bir liderleri var ve o karari veriyor, daha sonra bunlarin lieutenantlari karari diger generallere bildirmeleri lazim, fakat bas general bir lietutant a farkli digerine farkli bisi diyebilir, veya lietuant hayindir ve attack kararini retreat diye iletebilir.
 
 **Interactive consistentcy :** Her process single value oneriyor, algoritmanin amaci vector of values ta bir aggreement yaratmak olsun, bunun adi decision vector oluyor. Bu durumda her process'te gun sonunda ayni vector un olmasi lazim.
 
-**Consensus in a sync system :** 
+**Consensus in a sync system :** Sync sistemlerde consensus'a ulasmak icin eger f tane byzantine fault process varsa her process f+1 round yapmalidir. Bu f+1 round'ta her process B-multicast yapicak. 
+
+**The Byzantine generals problem in a sync system :** Eger sadece 3 process varsa ve bunlardan biri arbitrary fail ederse bu sistem consensus'a ulasamaz. N kucukesit 3f+1 olmasi lazim, yani eger ortamda 1 tane f (arbitrary fail) eden proces varsa 4 tane process olmasi lazim toplamda consensus icin. 
+
+**Impossibility in async systems :** Burdaki problem process'ler arbitrary times'ta respond verebilirler, bu yuzden crashed process ile slow process'i ayirmak imkansiz. 
+
+# Ari - 12 Consensus
+Fail safe: bir veya daha fazla failure system de damage'e yol acmazsa o sistem fail-safe'tir  
+Fault tolerant: bir veya daha fazla failure olsa bile sistem islemeye devam ediyorsa o sistem fault tolerant'tir.  
+
+Byzantine algoritmasinda, ilk round'ta generaller kendi kararlarini gonderirler, diger roundlarda ise baska generallerden aldiklari kararlari gonderirler. Bu durumda generaller eger degistirmeden baskalarindan aldiklari kararlari da birbirlerine iletirlerse, yeterli round'tan sonra eger traitor olsa bile loyal generallerin kararlari baskin cikar.
+
+![byzantine](files/byzantine.png)
+
+**The flooding algoritmh :** 
+
+**The King algorithm :**
 
 
+# Mar 3 - Concurrency in the Cloud
+Concurrency is necessity that multiple activities takes a place at the same time.  
+Parallel processing is implies a solution, where several processors capable of carrying out the computations required by these activities at the sime time, concurrently.  
+Yani soyle dusunebiliriz, concurrency daha cok tasklarin, aktivitlerin birbiri arasindaki iliskisi, ayni memory'i duzgun sekilde kullanmalari gibi konulara egilirken, parallel programming direk islem suresini kisaltmaya yoneliktir.
 
+Concurrency nin asil amaci tek bir bilgisayarin limitasyonlarindan kurtularak, isi birden fazla bilgisayara bolerek sonucu daha kisa surede almaktir. Bu yuzden de cloud computing'in en onemli ozelligidir.
 
+**Global state'i bilmemiz neden onemli :** global state'i bilirsek, debugging and monitoring yapabiliriz, deadlock veya starvation var mi anlamak icin yine global state'i bilmemiz lazim, snapshot alip daha sonra checkpoint yaratabilmek icin veya veri, state kaybetmeden restart yapabilmek icin lazim, son olarak ta termination i anlayabilmemiz icin global state'i bilmemiz lazim.
 
+## 3.1 Enduring Challanges; Concurrency and Cloud computing
+En buyuk challange cloud computing icin de, coordination ve senkronizayson. Eger coordination duzgun yapilamazsa deadlock olusur hemen. Senkronizasyon icin en iyi problem dining philosophers problemi. Herkes solundaki catali alir ve sagindakinin bosa cikmasini beklerse deadlock olusur. Bunun cozumu her filozof eger sagindaki veya solundaki en dusuk numarali catali alir ve digerini beklerse starvation yasanmaz.
 
+![dining3](files/dining3.png)
 
+Burda mesela herkes etrafindaki en dusuk numarali catali alirsa 1 ve 5 numarali catallarin arasinda oturan bir catal alamayak onun yerine 4 5 arasinda oturan ikisni de alicak, boylece herkes ayni anda catal alsa bile starvation yasanmayacak.
 
+Barrier Syncronizatoin : Tasklarin stage'leri varsa ve diger stage'e gecmek icin hepsinin bitmesi gerekiyorsa, bazen bazi tasklar hizli biter ve digerlerini beklemek zorunda kalirlar, buna barrier sycn denir.
 
+## 3.2 Communication and Concurrency in Computing
+Fine-Grained paralellikte, tasklar kendi aralarinda cok fazla iletisim kurmak durumunda kalirlar, bu eger ayni hardware ustunde yapiliyor veya shared memory ustunden yapiliyorsa nitekim hizli olabilir ama bir distributed system uzerinden yapiliyorsa o zaman daha yavas isler, ayni zamanda task mesaj gonderir veya beklerken aslinda binlerce instruction execute edebilecekken bunu yapamaz.  
+Coarse-Grained ise bunun tam tersi, ozellikle distributed systemlerde coarsa grained tasklari tercih etmeliyiz.
 
+Gunumuz computer sistemleri 2 model kullanir, bunlardan biri von neumann'in gelistirdigi control flow, digeri ise data flow. Control flow'da concurrency ancak multiple thread kullanilarak multitasking olarak yapilabilinir, control flow instruction'larin tek tek execute edilmesi ve control flow'lar ile path'in belirlenmesi ile olur. Data flow ise parallesism'e daha yatkindir, cunku data input geldigi zaman isleme baslayabilir, diger tasklari beklmesine gerek yoktur. 
 
+## 3.6 Process State; Global State of a Process or Thread Group
+Bir process'i kaldigi yerden baslatmak icin veya restart ettikten sonra dogru calisabilmesi icin gerekli tum bilgilerin oldugu dataset'e state diyoruz. Process'in bir state'ten digerine gecmesine de event diyoruz. Bir process'in state'i e eventi ile e+1. event arasinda ayni kalir. e+1 eventi gerceklestikten sonra yeni bir state'i olur.
+
+Global state ise o sistemdeki tum process'lerin state'leri + communication channel'da alinan ve gonderilen bilgierin toplanmasi ile elde edilir.
+
+## 3.8 Communication, Logical Clocks and Message Delivery Rules
+Hardware clocklari real time sistemlerde kullanmamiz gerekiyor, cunku bir event baska bir event'ten t sure sonra gerceklesmesi gerekebilir. Bu durumda da distributed sistemlerdeki clock drift'in ve skew'in belli bir range'de olmasi gerekiyor, ve en ufak 2 event'den daha hassas olmasi gerekiyor timer'in yoksa hangi event once hangisi sonra anlasilamaz.
+
+Fakat her durumda da hardware clock'lari kullanamayiz, cunku hicbir zaman distrbiuted sistemlerde bir global clock olamaz ve clocklari birbirine perfect sekilde sync edemeyiz. Ayni zamanda mesaj iletiminde aksaklik olabilir, veya baska bir route'tan gidiyor olabilir o yuzden mesajlarin round trip time'ini da kesin bir sekilde hesaplayamayabiliriz her zaman. (Ama sync sistemlerde bu bir range icinde kalmali yani min max i olmasli, async sistemlerde ise boyle bir range yok)
+
+Bunun yerine bir abstraction olan logical clocklari kullanabiliriz. Logical clocklar happened before esasina gore calisir. Her event'e bir numara verilir ve mesaji gonderen process event number'ini da mesaja koyar, daha sonra mesaji alan kendi event numberi ile geleni karsilastirir ve buyuk olani kendi yeni event numberi olarak belirler. Eger farkli processlerdeki eventleri happened before sirasina gore dizemiyorsak o zaman bunlar concurrent eventler diyebiliriz.
+
+Message delivery icin de FIFO abstracion'i yapabliriz yani process p1 once m sonra m' mesajlarini gonderdi ise process p2 nin de once m sonra m' nu almasini bekleriz. Eger implementasyon FIFO yoksa, mesajlara numara vererek bu saglanabilir. (Neden onemli, bazen gerekli olur mesela ilk command robot kola turn left komutunu ikinci mesaj ise turn right komutunu vericek, ilk once left sonra right gitmez tersi olursa robot yanlis manvera yapacaktir.)
+
+## 3.9 Runs and Cuts; Casual History
+Sistemin global state'ini almak su islere yarar, sistemde deadlock var mi ogrenmek icin, sistemin genel heath'ini ogrenmek icin veya sistemi migrate edecegizdir veya restart edecegizdir o yuzden kaldigi yerden baslamasi icin snapshot veya global state'ine ihtiyacimiz var. Fakat bunu straightforward bir sekilde yapamiyoruz, yani bir monitor process'i dusunelim ve bu process her process'e o process'in o anlik state'ini request ediyor ve process'ler de response olarak donuyorlar. Eger sync bir global clock olsaydi bu ise yarardi fakat distributed systemlerde global clock yok.
+
+Snapshot veya global state alirken aslinda sistemin cut'larini aliriz, yani sistemi bir yerden kesmemiz ve sadece o cizginin sol tarafindaki eventleri global state'e yazmamiz gerekiyor, fakat bunu ypaarken happened before prensibini bozmadan yapmaliyiz. Yani cut alirken iki processten receive edeni alir, send edeni almazsak happened before bozulmus olur ve inconsistent cut elde etmis oluruz.
+
+![inconsistentCut](files/inconsistentCut.png)
+
+**Chandy Lamport algoritmasi :** 
+* processlerden biri snapshot surecini baslatir, kendi internal process'inin snapshot'ini alir ve tum outgoint channellarina snapshot mesaji yollar
+* mesaji alan process yine kendi internal snapshot'ini alir snapshot mesajini yine outgoing channellarindan gonderir ve de gelen channel'in state listesini empty list yapar ve o kanali dinlemeye baslar.
+* ne zamanki bir process'in input kanallarindan birinden 2.defa snapshot mesaji gelirse o kanali dinlemeyi birakir ve o zamana kadar o kanaldan gelmis tum mesajlari kaydeder.
+* Tum processler tum incoming channellarindan 2.defa mesaj aldiklarinda snapshot islemi bitmis demektir.
+
+## 3.11 Critical Sections, Locks, Deadlocks, and Atomic Actions
+Lock'lar su yuzden onemli, mesela financial bir application var ve musterinin hesabinda islem yapicaz, bir thread bir isleme basladiysa interrupt edilmeden o islemi bitirmeli, yani o sureye kadar baska hicbir thread write yapamamli o hesaba. Veya baska bir ornek bir musterinin hesabindan baska bir musterinin hesabina para transferi yapilacak, bu transfer yapilirken birden cok adim execute edilmesi gerekicektir muhtemelen. Fakat bu adimlarin basindan sonuna kadar hic dis mudahale olmadan ara vermeden yapilmasi lazim, bunlara atomic operation'lar diyoruz. Atomic operation yapilirken disariya da ne is yapildiginin bilgisini sizdirmamasi, gostermemesi lazim. Ve ayni zamanda bu adimlarin herhagi bir yerinde fail olursa, o adim tekrarlaranak son adima kadar gidilmesi laizm.
+
+![deadlock](files/deadlock.png)
 
 
 # Mar 4 - Parallel and Distributed Systems
@@ -487,4 +560,29 @@ Para-Virtulazion'da ise hypervisor guest operating systemlere bir API sunar ve g
 Diger adi hardware assisted virtualization, Intel VT-x and AMD-V olarak farkli 2 teknolojisi var. Normalde Ring 0'da VMM (Virtual machine monitor) veya hypervisor yasar, bu yuzden de privilaged instruction execute edemez guest OS, cunku o ring 1 de yasamaktadir. Bu problem full virtualization veya paravirtualization ile asilmistir ama overhead ikisinde de fazla ve bunlar software depended cozumler.  
 
 Hardware assisted virtualization'da ise VMEntry ve VMExit komutlari ile ring0 kontrolu hypervisor'dan guest OS'a gecebilir, boylece hypervisor privilaged komutlari trap edip sliently fail edip onu emulate etmekle ugrasmaz, guest os direk execute edebilir. VMCS'te (Virtual Machine Control Structure) da guest state, host state ve control data bolumleri bulunur cpu da. Ve de VMX root ve VMX non-root adinda 2 state vardir, bu iki state'de VMM VMX-root'ta guest os ise VMX non-root'ta bulunur ve state'er degisebilir VMEntry, VMExit komutlari ile.
+
+# Mar 11 - Cloud Security
+Su an cloud computing'teki en buyuk problem belli bir uluslararasi regulasyon ve standartin olmamasi, ve data'nin ulke boarderlari arasinda serbestce dolasabilmesi (GDPR bunu bir sekilde regule etmek istiyor). 
+
+## 11.1 Security, The Top Concern for Cloud Users
+Burdaki problem, kullanicilar cloud sistemlerini kullanmaya baslayinca, tum guvenlik isini de cloud servisi saglayan firmaya outsource ettiklerini saniyorlar ve aslinda bu boyle degil. Cloud firmasinin ne kadar iyi bir security'e sahip oldugunu bilemezsin. Diger taraftan sirketler cloud'a gecince kendi internal sistemlerini, ve kendi firewall'larini birakmak zorunda kaliyorlar ve tamamen cloud sirketine guvenmek zorunda kaliyorlar. Burda ozellikle privacy tasiyan datalar risk altina giriyor.  
+Diger bir problem de lifecycle of data, cloud sirketi data'yi sildim dediginde gercekten sildi mi onu bilemezsin, sana silinmis gibi gosterebilir ama hala yedegi backup'i veya redundacy yuzunden kopyalanmis baska bir kopyasi duruyor olabilir.
+
+Diger bir problem de legal concern'ler, uluslararasi bir standartizayson olmadigi icin, eger CSP interrupt edilirse, servisi kesintiye ugrarsa veya saldiri aninda tuttugu datalar silinirse kullaniciya ne olacagi acik degil.
+
+Diger bir problem ise eger CSP nin birden fazla ulkede serverlari bulunuyrsa her ulke farkli kurallar dayatabilir, burda tum CSP icin merkezinin oldugu ulkenin kurallarina mi uyacak yoksa her ulkede farkli kurallara mi uyacak belli degil, bu ulkelerin dayattigi kurallar cakisirsa ne olacak CSP'ye yine belli degil.
+
+## 11.2 Cloud Security Risks
+Cloud sistemlere yapilabilecek ataklari 3 sinifta degerlendirebiliriz
+
+**Traditional attacks :** Internete bagli tum bilgisayarlarin hedef olabilecegi atak turu, sql injection, phising, crendtial'larin calinmasi ve DDOS (Distributed DOS). Burda korunma ilk once kullanicidan basliyor, kendi cloud environmentini duzgun sekilde korumali, update'ler yapilmali, authentication ve authorization duzgun sekilde yapilandirilmali. 
+
+**Availability of Cloud services :** deprem, yangin, power outage gibi fiziksel durumlardan dolayi cloud servislerinin servis verememesi. 
+
+**Third Party control :** CSP'ler zaman zaman bazi islerini outsource etmek icin 3rd party company'lerle anlasirlar, bazen bu 3rd party'nin security level'i questionable olabilir. Veya bu 3rd party bir hardware supplier ise, sagladi hardware'ler sikintili olabilir. 
+
+Cloud'a yonelik ataklar temelde 3 parcayi hedef alir, bunlar User, Service ve Cloud infrastructure. User'a phising veya kullanici credentiallarini calmakla zarar verebilir. Service icin, eger user'in kullandigi service yeterince guvenli degilse veya guvenlik acigi varsa bu exploitten yararlanip service'i abuse edebilir. Son attack sekli ise cloud infra'ya yonelik, eger hypervisor'larda veya cloud'un kullandigi hardware de bir acik varsa bundan yararlanilabilinir, cloud infra'ya DDOS yapilarak servis vermesi engellenebilinir.
+
+## 11.3 Privacy and Privacy Impact Assessment
+
 

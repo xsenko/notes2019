@@ -135,11 +135,3 @@ burda da yarn nasil config ayar cekeriz var : https://www.cloudera.com/documenta
 * guzel anlatiyor: https://blog.cloudera.com/untangling-apache-hadoop-yarn-part-1-cluster-and-yarn-basics/
 
 * lessons learned from scaling yarn 40k : https://www.slideshare.net/Hadoop_Summit/lessons-learned-from-scaling-yarn-to-40k-machines-in-a-multi-tenancy-environment
-
-
-
-
-
-
-
-

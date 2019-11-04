@@ -211,6 +211,19 @@ assemblyMergeStrategy in assembly := {
 `sbt assembly` diyince bize uber jar i verdi
 
 
+* eger sonradan datanode eklemke istiyorsan hadoop-daemon.sh start datanode demen lazim.
+
+* daha sonra hdfs dfsadmin -report ile bakabilirsin
+
+* yarn icin de yarn-daemon.sh start nodemanager diyeceksin eklemek icin sonradan.
+
+* yarn icin timeline server yarn timelineserver komutu ile calisiyor, default portu ise 8188
+
+* bu arada yarn-site.xml de bir degisiklik yaptiktan sonra bu dosyayi diger tum node'lara da kopyalaman lazim. Ve yarn i restart emen lazim.
+
+* 
+
+
 
 
 
