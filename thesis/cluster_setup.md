@@ -221,7 +221,13 @@ assemblyMergeStrategy in assembly := {
 
 * bu arada yarn-site.xml de bir degisiklik yaptiktan sonra bu dosyayi diger tum node'lara da kopyalaman lazim. Ve yarn i restart emen lazim.
 
-* 
+* mapreduce history serveri baslatmak icin ./mr-jobhistory-daemon.sh start historyserver portu da 19888
+
+* bir ip den gelen tum requestleri accept etmek icin ufw de bunu dicen sudo ufw allow from 198.51.100.0
+
+* yarn timelineserver i deamon olarak calistircaksan
+$HADOOP_YARN_HOME/sbin/yarn-daemon.sh start timelineserver
+dieyceksin portu 8188
 
 
 

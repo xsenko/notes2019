@@ -148,3 +148,5 @@ Batch programming icin DataSet API kullaniliyor, streaming ler icin ise DataStre
 ` burda tabii cluster da local degil cluster diycez
 
 * bu javax.xml.parsers ile ilgili problemi cluster'da da aldik, ypatigim is, clusterdaki flink/lib altindaki flink-shaded-hadoop-2-uber-2.8.3-3.7.0.jar vardi bunu benim localde olan flink-shaded-hadoop2-uber-2.8.3-1.8.2.jar ile degistirdim. sonra calisti
+
+* daha sonra lib altindaki tum flink-shaded jarlari cikardim calisti
